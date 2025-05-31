@@ -27,8 +27,11 @@ interface Order {
   id: number;
   customer: any;
   items: any[];
+  subtotal: number;
+  deliveryFee: number;
   total: number;
   address: string;
+  area?: string;
   paymentMethod: string;
   phoneNumber: string;
   date: string;
@@ -52,12 +55,17 @@ const Admin = () => {
   const [description, setDescription] = useState("");
 
   useEffect(() => {
+    // Check if user is admin
     if (!user?.isAdmin) {
       navigate("/");
       return;
     }
     
-    // Load products from localStorage or use initial products
+    loadProducts();
+    loadOrders();
+  }, [user, navigate]);
+
+  const loadProducts = () => {
     const savedProducts = localStorage.getItem("urbanaura_products");
     if (savedProducts) {
       setProducts(JSON.parse(savedProducts));
@@ -116,13 +124,14 @@ const Admin = () => {
       setProducts(initialProducts);
       localStorage.setItem("urbanaura_products", JSON.stringify(initialProducts));
     }
+  };
 
-    // Load orders
+  const loadOrders = () => {
     const savedOrders = localStorage.getItem("urbanaura_orders");
     if (savedOrders) {
       setOrders(JSON.parse(savedOrders));
     }
-  }, [user, navigate]);
+  };
 
   const resetForm = () => {
     setName("");
@@ -134,7 +143,7 @@ const Admin = () => {
   };
 
   const handleAddProduct = () => {
-    if (!name || !category || !price || !description) {
+    if (!name.trim() || !category || !price || !description.trim()) {
       toast({
         title: "Error",
         description: "Please fill in all required fields.",
@@ -143,13 +152,23 @@ const Admin = () => {
       return;
     }
 
+    const priceNum = parseInt(price);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid price.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newProduct: Product = {
       id: Date.now(),
-      name,
+      name: name.trim(),
       category,
-      price: parseInt(price),
-      image: image || "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&h=400&fit=crop",
-      description,
+      price: priceNum,
+      image: image.trim() || "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&h=400&fit=crop",
+      description: description.trim(),
     };
 
     const updatedProducts = [...products, newProduct];
@@ -165,7 +184,7 @@ const Admin = () => {
   };
 
   const handleEditProduct = () => {
-    if (!editingProduct || !name || !category || !price || !description) {
+    if (!editingProduct || !name.trim() || !category || !price || !description.trim()) {
       toast({
         title: "Error",
         description: "Please fill in all required fields.",
@@ -174,9 +193,26 @@ const Admin = () => {
       return;
     }
 
+    const priceNum = parseInt(price);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid price.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const updatedProducts = products.map(product =>
       product.id === editingProduct.id
-        ? { ...product, name, category, price: parseInt(price), image: image || product.image, description }
+        ? { 
+            ...product, 
+            name: name.trim(), 
+            category, 
+            price: priceNum, 
+            image: image.trim() || product.image, 
+            description: description.trim() 
+          }
         : product
     );
 
@@ -192,14 +228,16 @@ const Admin = () => {
   };
 
   const handleDeleteProduct = (id: number) => {
-    const updatedProducts = products.filter(product => product.id !== id);
-    setProducts(updatedProducts);
-    localStorage.setItem("urbanaura_products", JSON.stringify(updatedProducts));
-    
-    toast({
-      title: "Success",
-      description: "Product deleted successfully!",
-    });
+    if (confirm("Are you sure you want to delete this product?")) {
+      const updatedProducts = products.filter(product => product.id !== id);
+      setProducts(updatedProducts);
+      localStorage.setItem("urbanaura_products", JSON.stringify(updatedProducts));
+      
+      toast({
+        title: "Success",
+        description: "Product deleted successfully!",
+      });
+    }
   };
 
   const startEdit = (product: Product) => {
@@ -212,8 +250,31 @@ const Admin = () => {
     setIsEditDialogOpen(true);
   };
 
+  const updateOrderStatus = (orderId: number, newStatus: string) => {
+    const updatedOrders = orders.map(order =>
+      order.id === orderId ? { ...order, status: newStatus } : order
+    );
+    setOrders(updatedOrders);
+    localStorage.setItem("urbanaura_orders", JSON.stringify(updatedOrders));
+    
+    toast({
+      title: "Success",
+      description: `Order status updated to ${newStatus}`,
+    });
+  };
+
   if (!user?.isAdmin) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
+          <p className="text-gray-600 mb-4">You need admin privileges to access this page.</p>
+          <Button onClick={() => navigate("/")} className="bg-black text-white hover:bg-gray-800">
+            Go Home
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -360,7 +421,7 @@ const Admin = () => {
                         />
                         <div>
                           <h3 className="font-medium">{product.name}</h3>
-                          <p className="text-sm text-gray-600">{product.category}</p>
+                          <p className="text-sm text-gray-600 capitalize">{product.category.replace('-', ' ')}</p>
                           <p className="text-sm font-semibold">KSh {product.price.toLocaleString()}</p>
                         </div>
                       </div>
@@ -379,6 +440,9 @@ const Admin = () => {
                       </div>
                     </div>
                   ))}
+                  {products.length === 0 && (
+                    <p className="text-gray-600 text-center py-8">No products found. Add your first product!</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -406,6 +470,7 @@ const Admin = () => {
                         <TableHead>Payment</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -417,6 +482,7 @@ const Admin = () => {
                               <p className="font-medium">{order.customer?.name}</p>
                               <p className="text-sm text-gray-600">{order.customer?.email}</p>
                               <p className="text-sm text-gray-600">{order.address}</p>
+                              {order.area && <p className="text-sm text-gray-500">Area: {order.area}</p>}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -428,7 +494,14 @@ const Admin = () => {
                               ))}
                             </div>
                           </TableCell>
-                          <TableCell>KSh {order.total.toLocaleString()}</TableCell>
+                          <TableCell>
+                            <div>
+                              <p>KSh {order.total.toLocaleString()}</p>
+                              <p className="text-xs text-gray-500">
+                                (Items: {order.subtotal.toLocaleString()} + Delivery: {order.deliveryFee.toLocaleString()})
+                              </p>
+                            </div>
+                          </TableCell>
                           <TableCell>
                             <div>
                               <p>{order.paymentMethod === "mpesa" ? "M-Pesa" : "Cash on Delivery"}</p>
@@ -439,9 +512,31 @@ const Admin = () => {
                           </TableCell>
                           <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                           <TableCell>
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
-                              {order.status}
-                            </span>
+                            <Select 
+                              value={order.status} 
+                              onValueChange={(value) => updateOrderStatus(order.id, value)}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Processing">Processing</SelectItem>
+                                <SelectItem value="Confirmed">Confirmed</SelectItem>
+                                <SelectItem value="Out for Delivery">Out for Delivery</SelectItem>
+                                <SelectItem value="Delivered">Delivered</SelectItem>
+                                <SelectItem value="Cancelled">Cancelled</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateOrderStatus(order.id, "Delivered")}
+                              disabled={order.status === "Delivered"}
+                            >
+                              Mark Delivered
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}

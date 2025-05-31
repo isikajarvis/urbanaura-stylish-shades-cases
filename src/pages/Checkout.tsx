@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -19,15 +20,52 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState("mpesa");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
+  const [area, setArea] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const deliveryFee = 200; // KSh 200 delivery fee
+  // Delivery pricing based on areas
+  const deliveryPricing = {
+    "city-center": 150,
+    "westlands": 200,
+    "karen": 300,
+    "kiambu": 400,
+    "thika": 500,
+    "other": 350
+  };
+
+  const deliveryFee = area ? deliveryPricing[area as keyof typeof deliveryPricing] || 350 : 200;
+
+  const simulateMpesaPrompt = async (phoneNumber: string, amount: number) => {
+    console.log(`Simulating M-Pesa prompt to ${phoneNumber} for KSh ${amount}`);
+    
+    // Simulate API call to M-Pesa
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        // Simulate success/failure
+        const success = Math.random() > 0.1; // 90% success rate
+        if (success) {
+          resolve({ success: true, transactionId: `TXN${Date.now()}` });
+        } else {
+          reject(new Error("M-Pesa transaction failed"));
+        }
+      }, 3000); // 3 second delay to simulate real API
+    });
+  };
 
   const handlePlaceOrder = async () => {
     if (!address.trim()) {
       toast({
         title: "Error",
         description: "Please enter your delivery address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!area) {
+      toast({
+        title: "Error",
+        description: "Please select your delivery area.",
         variant: "destructive",
       });
       return;
@@ -45,16 +83,33 @@ const Checkout = () => {
     setIsProcessing(true);
 
     try {
-      // Simulate order processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const totalAmount = getTotalPrice() + deliveryFee;
+
+      if (paymentMethod === "mpesa") {
+        toast({
+          title: "M-Pesa Prompt Sent",
+          description: `Please check your phone ${phoneNumber} for M-Pesa payment prompt of KSh ${totalAmount.toLocaleString()}`,
+        });
+
+        // Simulate M-Pesa payment
+        await simulateMpesaPrompt(phoneNumber, totalAmount);
+        
+        toast({
+          title: "Payment Successful",
+          description: "M-Pesa payment completed successfully!",
+        });
+      }
       
       // Save order to localStorage for admin to see
       const order = {
         id: Date.now(),
         customer: user,
         items,
-        total: getTotalPrice() + deliveryFee,
+        subtotal: getTotalPrice(),
+        deliveryFee,
+        total: totalAmount,
         address,
+        area,
         paymentMethod,
         phoneNumber: paymentMethod === "mpesa" ? phoneNumber : "",
         date: new Date().toISOString(),
@@ -70,12 +125,12 @@ const Checkout = () => {
       
       toast({
         title: "Order placed successfully!",
-        description: "Your order is being processed.",
+        description: "Your order is being processed and will be delivered within 90 minutes.",
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to place order. Please try again.",
+        title: "Payment Failed",
+        description: "M-Pesa payment failed. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -124,12 +179,28 @@ const Checkout = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="address">Delivery Address *</Label>
+                  <Label htmlFor="area">Delivery Area *</Label>
+                  <Select value={area} onValueChange={setArea}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select your area" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="city-center">Nairobi City Center - KSh 150</SelectItem>
+                      <SelectItem value="westlands">Westlands - KSh 200</SelectItem>
+                      <SelectItem value="karen">Karen - KSh 300</SelectItem>
+                      <SelectItem value="kiambu">Kiambu - KSh 400</SelectItem>
+                      <SelectItem value="thika">Thika - KSh 500</SelectItem>
+                      <SelectItem value="other">Other Areas - KSh 350</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="address">Detailed Address *</Label>
                   <Input
                     id="address"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Enter your full address"
+                    placeholder="Enter your detailed address"
                     className="mt-1"
                     required
                   />
@@ -173,7 +244,7 @@ const Checkout = () => {
                       id="phone"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="07XXXXXXXX"
+                      placeholder="07XXXXXXXX or 254XXXXXXXX"
                       className="mt-1"
                     />
                     <p className="text-sm text-gray-600 mt-1">
@@ -213,7 +284,7 @@ const Checkout = () => {
                     <span>KSh {getTotalPrice().toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Delivery</span>
+                    <span>Delivery ({area || 'Select area'})</span>
                     <span>KSh {deliveryFee}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold border-t pt-2">
