@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Package } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Users, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
@@ -21,10 +23,23 @@ interface Product {
   description: string;
 }
 
+interface Order {
+  id: number;
+  customer: any;
+  items: any[];
+  total: number;
+  address: string;
+  paymentMethod: string;
+  phoneNumber: string;
+  date: string;
+  status: string;
+}
+
 const Admin = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -42,58 +57,71 @@ const Admin = () => {
       return;
     }
     
-    // Load initial products with real images
-    const initialProducts = [
-      {
-        id: 1,
-        name: "Clear iPhone 15 Case",
-        category: "iphone-cases",
-        price: 2500,
-        image: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&h=400&fit=crop",
-        description: "Crystal clear protection for your iPhone 15"
-      },
-      {
-        id: 2,
-        name: "Leather iPhone 15 Pro Case",
-        category: "iphone-cases",
-        price: 4500,
-        image: "https://images.unsplash.com/photo-1556656793-08538906a9f8?w=400&h=400&fit=crop",
-        description: "Premium leather case with card slots"
-      },
-      {
-        id: 3,
-        name: "MagSafe iPhone 14 Case",
-        category: "iphone-cases",
-        price: 3500,
-        image: "https://images.unsplash.com/photo-1592779677260-dea1358c09d3?w=400&h=400&fit=crop",
-        description: "Compatible with MagSafe charging"
-      },
-      {
-        id: 4,
-        name: "Aviator Sunglasses",
-        category: "sunglasses",
-        price: 6500,
-        image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop",
-        description: "Classic aviator style with UV protection"
-      },
-      {
-        id: 5,
-        name: "Polarized Sport Sunglasses",
-        category: "sunglasses",
-        price: 8500,
-        image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=400&fit=crop",
-        description: "Perfect for outdoor activities"
-      },
-      {
-        id: 6,
-        name: "Vintage Round Sunglasses",
-        category: "sunglasses",
-        price: 5500,
-        image: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=400&h=400&fit=crop",
-        description: "Retro style meets modern protection"
-      }
-    ];
-    setProducts(initialProducts);
+    // Load products from localStorage or use initial products
+    const savedProducts = localStorage.getItem("urbanaura_products");
+    if (savedProducts) {
+      setProducts(JSON.parse(savedProducts));
+    } else {
+      // Initial products
+      const initialProducts = [
+        {
+          id: 1,
+          name: "Clear iPhone 15 Case",
+          category: "iphone-cases",
+          price: 2500,
+          image: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&h=400&fit=crop",
+          description: "Crystal clear protection for your iPhone 15"
+        },
+        {
+          id: 2,
+          name: "Leather iPhone 15 Pro Case",
+          category: "iphone-cases",
+          price: 4500,
+          image: "https://images.unsplash.com/photo-1556656793-08538906a9f8?w=400&h=400&fit=crop",
+          description: "Premium leather case with card slots"
+        },
+        {
+          id: 3,
+          name: "MagSafe iPhone 14 Case",
+          category: "iphone-cases",
+          price: 3500,
+          image: "https://images.unsplash.com/photo-1592779677260-dea1358c09d3?w=400&h=400&fit=crop",
+          description: "Compatible with MagSafe charging"
+        },
+        {
+          id: 4,
+          name: "Aviator Sunglasses",
+          category: "sunglasses",
+          price: 6500,
+          image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop",
+          description: "Classic aviator style with UV protection"
+        },
+        {
+          id: 5,
+          name: "Polarized Sport Sunglasses",
+          category: "sunglasses",
+          price: 8500,
+          image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=400&fit=crop",
+          description: "Perfect for outdoor activities"
+        },
+        {
+          id: 6,
+          name: "Vintage Round Sunglasses",
+          category: "sunglasses",
+          price: 5500,
+          image: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=400&h=400&fit=crop",
+          description: "Retro style meets modern protection"
+        }
+      ];
+      setProducts(initialProducts);
+      localStorage.setItem("urbanaura_products", JSON.stringify(initialProducts));
+    }
+
+    // Load orders
+    const savedOrders = localStorage.getItem("urbanaura_orders");
+    if (savedOrders) {
+      setOrders(JSON.parse(savedOrders));
+    }
   }, [user, navigate]);
 
   const resetForm = () => {
@@ -124,7 +152,9 @@ const Admin = () => {
       description,
     };
 
-    setProducts([...products, newProduct]);
+    const updatedProducts = [...products, newProduct];
+    setProducts(updatedProducts);
+    localStorage.setItem("urbanaura_products", JSON.stringify(updatedProducts));
     resetForm();
     setIsAddDialogOpen(false);
     
@@ -151,6 +181,7 @@ const Admin = () => {
     );
 
     setProducts(updatedProducts);
+    localStorage.setItem("urbanaura_products", JSON.stringify(updatedProducts));
     resetForm();
     setIsEditDialogOpen(false);
     
@@ -161,7 +192,10 @@ const Admin = () => {
   };
 
   const handleDeleteProduct = (id: number) => {
-    setProducts(products.filter(product => product.id !== id));
+    const updatedProducts = products.filter(product => product.id !== id);
+    setProducts(updatedProducts);
+    localStorage.setItem("urbanaura_products", JSON.stringify(updatedProducts));
+    
     toast({
       title: "Success",
       description: "Product deleted successfully!",
@@ -191,7 +225,7 @@ const Admin = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Products</CardTitle>
@@ -223,116 +257,201 @@ const Admin = () => {
               </div>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{orders.length}</div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Products Management */}
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Products Management</CardTitle>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-black text-white hover:bg-gray-800">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Product
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Product</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="name">Product Name *</Label>
-                      <Input
-                        id="name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Enter product name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="category">Category *</Label>
-                      <Select value={category} onValueChange={setCategory}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="iphone-cases">iPhone Cases</SelectItem>
-                          <SelectItem value="sunglasses">Sunglasses</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="price">Price (KSh) *</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        placeholder="Enter price"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="image">Image URL (optional)</Label>
-                      <Input
-                        id="image"
-                        value={image}
-                        onChange={(e) => setImage(e.target.value)}
-                        placeholder="https://example.com/image.jpg"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="description">Description *</Label>
-                      <Textarea
-                        id="description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Enter product description"
-                      />
-                    </div>
-                    <Button onClick={handleAddProduct} className="w-full bg-black text-white hover:bg-gray-800">
-                      Add Product
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {products.map((product) => (
-                <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <img 
-                      src={product.image}
-                      alt={product.name}
-                      className="w-12 h-12 rounded object-cover"
-                    />
-                    <div>
-                      <h3 className="font-medium">{product.name}</h3>
-                      <p className="text-sm text-gray-600">{product.category}</p>
-                      <p className="text-sm font-semibold">KSh {product.price.toLocaleString()}</p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => startEdit(product)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteProduct(product.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+        <Tabs defaultValue="products" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="orders">Customer Orders</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="products">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Products Management</CardTitle>
+                  <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-black text-white hover:bg-gray-800">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Product
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Product</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="name">Product Name *</Label>
+                          <Input
+                            id="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Enter product name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="category">Category *</Label>
+                          <Select value={category} onValueChange={setCategory}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="iphone-cases">iPhone Cases</SelectItem>
+                              <SelectItem value="sunglasses">Sunglasses</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="price">Price (KSh) *</Label>
+                          <Input
+                            id="price"
+                            type="number"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            placeholder="Enter price"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="image">Image URL</Label>
+                          <Input
+                            id="image"
+                            value={image}
+                            onChange={(e) => setImage(e.target.value)}
+                            placeholder="https://example.com/image.jpg"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="description">Description *</Label>
+                          <Textarea
+                            id="description"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Enter product description"
+                          />
+                        </div>
+                        <Button onClick={handleAddProduct} className="w-full bg-black text-white hover:bg-gray-800">
+                          Add Product
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {products.map((product) => (
+                    <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <img 
+                          src={product.image}
+                          alt={product.name}
+                          className="w-12 h-12 rounded object-cover"
+                        />
+                        <div>
+                          <h3 className="font-medium">{product.name}</h3>
+                          <p className="text-sm text-gray-600">{product.category}</p>
+                          <p className="text-sm font-semibold">KSh {product.price.toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => startEdit(product)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="orders">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="h-5 w-5 mr-2" />
+                  Customer Orders
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {orders.length === 0 ? (
+                  <p className="text-gray-600 text-center py-8">No orders yet</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order ID</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Items</TableHead>
+                        <TableHead>Total</TableHead>
+                        <TableHead>Payment</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {orders.map((order) => (
+                        <TableRow key={order.id}>
+                          <TableCell>#{order.id}</TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{order.customer?.name}</p>
+                              <p className="text-sm text-gray-600">{order.customer?.email}</p>
+                              <p className="text-sm text-gray-600">{order.address}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {order.items.map((item, index) => (
+                                <div key={index} className="text-sm">
+                                  {item.name} x{item.quantity}
+                                </div>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell>KSh {order.total.toLocaleString()}</TableCell>
+                          <TableCell>
+                            <div>
+                              <p>{order.paymentMethod === "mpesa" ? "M-Pesa" : "Cash on Delivery"}</p>
+                              {order.phoneNumber && (
+                                <p className="text-sm text-gray-600">{order.phoneNumber}</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
+                              {order.status}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {/* Edit Product Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

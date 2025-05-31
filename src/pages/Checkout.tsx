@@ -21,6 +21,8 @@ const Checkout = () => {
   const [address, setAddress] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const deliveryFee = 200; // KSh 200 delivery fee
+
   const handlePlaceOrder = async () => {
     if (!address.trim()) {
       toast({
@@ -45,6 +47,22 @@ const Checkout = () => {
     try {
       // Simulate order processing
       await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Save order to localStorage for admin to see
+      const order = {
+        id: Date.now(),
+        customer: user,
+        items,
+        total: getTotalPrice() + deliveryFee,
+        address,
+        paymentMethod,
+        phoneNumber: paymentMethod === "mpesa" ? phoneNumber : "",
+        date: new Date().toISOString(),
+        status: "Processing"
+      };
+      
+      const existingOrders = JSON.parse(localStorage.getItem("urbanaura_orders") || "[]");
+      localStorage.setItem("urbanaura_orders", JSON.stringify([...existingOrders, order]));
       
       // Clear cart and redirect to success page
       clearCart();
@@ -117,7 +135,7 @@ const Checkout = () => {
                   />
                 </div>
                 <p className="text-sm text-green-600 font-medium">
-                  ✓ Free delivery within 90 minutes
+                  ✓ Delivery within 90 minutes - KSh {deliveryFee}
                 </p>
               </CardContent>
             </Card>
@@ -196,11 +214,11 @@ const Checkout = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Delivery</span>
-                    <span className="text-green-600">Free</span>
+                    <span>KSh {deliveryFee}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold border-t pt-2">
                     <span>Total</span>
-                    <span>KSh {getTotalPrice().toLocaleString()}</span>
+                    <span>KSh {(getTotalPrice() + deliveryFee).toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -209,7 +227,7 @@ const Checkout = () => {
                   disabled={isProcessing}
                   className="w-full bg-black text-white hover:bg-gray-800 mt-6"
                 >
-                  {isProcessing ? "Processing..." : `Place Order - KSh ${getTotalPrice().toLocaleString()}`}
+                  {isProcessing ? "Processing..." : `Place Order - KSh ${(getTotalPrice() + deliveryFee).toLocaleString()}`}
                 </Button>
 
                 <p className="text-xs text-gray-500 text-center">
