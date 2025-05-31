@@ -28,12 +28,8 @@ interface Order {
   customer: any;
   items: any[];
   subtotal: number;
-  deliveryFee: number;
   total: number;
   address: string;
-  area?: string;
-  paymentMethod: string;
-  phoneNumber: string;
   date: string;
   status: string;
 }
@@ -69,60 +65,6 @@ const Admin = () => {
     const savedProducts = localStorage.getItem("urbanaura_products");
     if (savedProducts) {
       setProducts(JSON.parse(savedProducts));
-    } else {
-      // Initial products
-      const initialProducts = [
-        {
-          id: 1,
-          name: "Clear iPhone 15 Case",
-          category: "iphone-cases",
-          price: 2500,
-          image: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&h=400&fit=crop",
-          description: "Crystal clear protection for your iPhone 15"
-        },
-        {
-          id: 2,
-          name: "Leather iPhone 15 Pro Case",
-          category: "iphone-cases",
-          price: 4500,
-          image: "https://images.unsplash.com/photo-1556656793-08538906a9f8?w=400&h=400&fit=crop",
-          description: "Premium leather case with card slots"
-        },
-        {
-          id: 3,
-          name: "MagSafe iPhone 14 Case",
-          category: "iphone-cases",
-          price: 3500,
-          image: "https://images.unsplash.com/photo-1592779677260-dea1358c09d3?w=400&h=400&fit=crop",
-          description: "Compatible with MagSafe charging"
-        },
-        {
-          id: 4,
-          name: "Aviator Sunglasses",
-          category: "sunglasses",
-          price: 6500,
-          image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop",
-          description: "Classic aviator style with UV protection"
-        },
-        {
-          id: 5,
-          name: "Polarized Sport Sunglasses",
-          category: "sunglasses",
-          price: 8500,
-          image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=400&fit=crop",
-          description: "Perfect for outdoor activities"
-        },
-        {
-          id: 6,
-          name: "Vintage Round Sunglasses",
-          category: "sunglasses",
-          price: 5500,
-          image: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=400&h=400&fit=crop",
-          description: "Retro style meets modern protection"
-        }
-      ];
-      setProducts(initialProducts);
-      localStorage.setItem("urbanaura_products", JSON.stringify(initialProducts));
     }
   };
 
@@ -286,7 +228,7 @@ const Admin = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Products</CardTitle>
@@ -304,17 +246,6 @@ const Admin = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {products.filter(p => p.category === "iphone-cases").length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sunglasses</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {products.filter(p => p.category === "sunglasses").length}
               </div>
             </CardContent>
           </Card>
@@ -460,58 +391,16 @@ const Admin = () => {
                 {orders.length === 0 ? (
                   <p className="text-gray-600 text-center py-8">No orders yet</p>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Order ID</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Items</TableHead>
-                        <TableHead>Total</TableHead>
-                        <TableHead>Payment</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {orders.map((order) => (
-                        <TableRow key={order.id}>
-                          <TableCell>#{order.id}</TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{order.customer?.name}</p>
-                              <p className="text-sm text-gray-600">{order.customer?.email}</p>
-                              <p className="text-sm text-gray-600">{order.address}</p>
-                              {order.area && <p className="text-sm text-gray-500">Area: {order.area}</p>}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              {order.items.map((item, index) => (
-                                <div key={index} className="text-sm">
-                                  {item.name} x{item.quantity}
-                                </div>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p>KSh {order.total.toLocaleString()}</p>
-                              <p className="text-xs text-gray-500">
-                                (Items: {order.subtotal.toLocaleString()} + Delivery: {order.deliveryFee.toLocaleString()})
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p>{order.paymentMethod === "mpesa" ? "M-Pesa" : "Cash on Delivery"}</p>
-                              {order.phoneNumber && (
-                                <p className="text-sm text-gray-600">{order.phoneNumber}</p>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
-                          <TableCell>
+                  <div className="space-y-4">
+                    {orders.map((order) => (
+                      <div key={order.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="font-semibold">Order #{order.id}</h3>
+                            <p className="text-sm text-gray-600">{new Date(order.date).toLocaleDateString()}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">KSh {order.total.toLocaleString()}</p>
                             <Select 
                               value={order.status} 
                               onValueChange={(value) => updateOrderStatus(order.id, value)}
@@ -527,21 +416,30 @@ const Admin = () => {
                                 <SelectItem value="Cancelled">Cancelled</SelectItem>
                               </SelectContent>
                             </Select>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => updateOrderStatus(order.id, "Delivered")}
-                              disabled={order.status === "Delivered"}
-                            >
-                              Mark Delivered
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-medium mb-2">Customer Info</h4>
+                            <p className="text-sm">{order.customer?.name || "Guest Customer"}</p>
+                            <p className="text-sm text-gray-600">{order.customer?.email || "No email"}</p>
+                            <p className="text-sm text-gray-600">{order.address}</p>
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-medium mb-2">Items</h4>
+                            {order.items.map((item, index) => (
+                              <div key={index} className="text-sm flex justify-between">
+                                <span>{item.name} x{item.quantity}</span>
+                                <span>KSh {(item.price * item.quantity).toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>

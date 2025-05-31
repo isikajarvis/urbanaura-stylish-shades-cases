@@ -1,13 +1,11 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CreditCard, Smartphone, Truck } from "lucide-react";
+import { Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -17,42 +15,21 @@ const Checkout = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  const [paymentMethod, setPaymentMethod] = useState("mpesa");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [customerName, setCustomerName] = useState(user?.name || "");
+  const [customerEmail, setCustomerEmail] = useState(user?.email || "");
   const [address, setAddress] = useState("");
-  const [area, setArea] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Delivery pricing based on areas
-  const deliveryPricing = {
-    "city-center": 150,
-    "westlands": 200,
-    "karen": 300,
-    "kiambu": 400,
-    "thika": 500,
-    "other": 350
-  };
-
-  const deliveryFee = area ? deliveryPricing[area as keyof typeof deliveryPricing] || 350 : 200;
-
-  const simulateMpesaPrompt = async (phoneNumber: string, amount: number) => {
-    console.log(`Simulating M-Pesa prompt to ${phoneNumber} for KSh ${amount}`);
-    
-    // Simulate API call to M-Pesa
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Simulate success/failure
-        const success = Math.random() > 0.1; // 90% success rate
-        if (success) {
-          resolve({ success: true, transactionId: `TXN${Date.now()}` });
-        } else {
-          reject(new Error("M-Pesa transaction failed"));
-        }
-      }, 3000); // 3 second delay to simulate real API
-    });
-  };
-
   const handlePlaceOrder = async () => {
+    if (!customerName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!address.trim()) {
       toast({
         title: "Error",
@@ -62,56 +39,23 @@ const Checkout = () => {
       return;
     }
 
-    if (!area) {
-      toast({
-        title: "Error",
-        description: "Please select your delivery area.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (paymentMethod === "mpesa" && !phoneNumber.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter your M-Pesa phone number.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsProcessing(true);
 
     try {
-      const totalAmount = getTotalPrice() + deliveryFee;
-
-      if (paymentMethod === "mpesa") {
-        toast({
-          title: "M-Pesa Prompt Sent",
-          description: `Please check your phone ${phoneNumber} for M-Pesa payment prompt of KSh ${totalAmount.toLocaleString()}`,
-        });
-
-        // Simulate M-Pesa payment
-        await simulateMpesaPrompt(phoneNumber, totalAmount);
-        
-        toast({
-          title: "Payment Successful",
-          description: "M-Pesa payment completed successfully!",
-        });
-      }
+      const totalAmount = getTotalPrice();
       
       // Save order to localStorage for admin to see
       const order = {
         id: Date.now(),
-        customer: user,
+        customer: {
+          name: customerName.trim(),
+          email: customerEmail.trim() || "No email provided"
+        },
         items,
         subtotal: getTotalPrice(),
-        deliveryFee,
         total: totalAmount,
-        address,
-        area,
-        paymentMethod,
-        phoneNumber: paymentMethod === "mpesa" ? phoneNumber : "",
+        address: address.trim(),
+        paymentMethod: "Cash on Delivery",
         date: new Date().toISOString(),
         status: "Processing"
       };
@@ -125,12 +69,12 @@ const Checkout = () => {
       
       toast({
         title: "Order placed successfully!",
-        description: "Your order is being processed and will be delivered within 90 minutes.",
+        description: "Your order will be delivered soon. Payment on delivery.",
       });
     } catch (error) {
       toast({
-        title: "Payment Failed",
-        description: "M-Pesa payment failed. Please try again.",
+        title: "Order Failed",
+        description: "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -149,53 +93,40 @@ const Checkout = () => {
         <h1 className="text-3xl font-bold text-black mb-8">Checkout</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Order Details */}
+          {/* Customer & Delivery Information */}
           <div className="space-y-6">
-            {/* Delivery Information */}
             <Card className="bg-white">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Truck className="h-5 w-5 mr-2" />
-                  Delivery Information
+                  Customer & Delivery Information
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="customerName">Full Name *</Label>
                   <Input
-                    id="name"
-                    value={user?.name || ""}
-                    disabled
+                    id="customerName"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Enter your full name"
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="customerEmail">Email (Optional)</Label>
+                  <Input
+                    id="customerEmail"
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="Enter your email"
                     className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    value={user?.email || ""}
-                    disabled
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="area">Delivery Area *</Label>
-                  <Select value={area} onValueChange={setArea}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select your area" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="city-center">Nairobi City Center - KSh 150</SelectItem>
-                      <SelectItem value="westlands">Westlands - KSh 200</SelectItem>
-                      <SelectItem value="karen">Karen - KSh 300</SelectItem>
-                      <SelectItem value="kiambu">Kiambu - KSh 400</SelectItem>
-                      <SelectItem value="thika">Thika - KSh 500</SelectItem>
-                      <SelectItem value="other">Other Areas - KSh 350</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="address">Detailed Address *</Label>
+                  <Label htmlFor="address">Delivery Address *</Label>
                   <Input
                     id="address"
                     value={address}
@@ -205,53 +136,14 @@ const Checkout = () => {
                     required
                   />
                 </div>
-                <p className="text-sm text-green-600 font-medium">
-                  ✓ Delivery within 90 minutes - KSh {deliveryFee}
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Payment Method */}
-            <Card className="bg-white">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <CreditCard className="h-5 w-5 mr-2" />
-                  Payment Method
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <div className="flex items-center space-x-2 p-4 border rounded-lg">
-                    <RadioGroupItem value="mpesa" id="mpesa" />
-                    <Smartphone className="h-5 w-5 text-green-600" />
-                    <Label htmlFor="mpesa" className="flex-1">
-                      M-Pesa Payment
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2 p-4 border rounded-lg">
-                    <RadioGroupItem value="cod" id="cod" />
-                    <Truck className="h-5 w-5 text-blue-600" />
-                    <Label htmlFor="cod" className="flex-1">
-                      Cash on Delivery
-                    </Label>
-                  </div>
-                </RadioGroup>
-
-                {paymentMethod === "mpesa" && (
-                  <div className="mt-4">
-                    <Label htmlFor="phone">M-Pesa Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="07XXXXXXXX or 254XXXXXXXX"
-                      className="mt-1"
-                    />
-                    <p className="text-sm text-gray-600 mt-1">
-                      You will receive an M-Pesa prompt to complete payment
-                    </p>
-                  </div>
-                )}
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <p className="text-sm text-green-700 font-medium">
+                    ✓ Free Delivery
+                  </p>
+                  <p className="text-sm text-green-600">
+                    Pay cash when your order arrives
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -283,14 +175,22 @@ const Checkout = () => {
                     <span>Subtotal</span>
                     <span>KSh {getTotalPrice().toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Delivery ({area || 'Select area'})</span>
-                    <span>KSh {deliveryFee}</span>
+                  <div className="flex justify-between text-green-600">
+                    <span>Delivery</span>
+                    <span>Free</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold border-t pt-2">
                     <span>Total</span>
-                    <span>KSh {(getTotalPrice() + deliveryFee).toLocaleString()}</span>
+                    <span>KSh {getTotalPrice().toLocaleString()}</span>
                   </div>
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Payment Method</h4>
+                  <p className="text-sm text-blue-800">Cash on Delivery</p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Pay with cash when your order is delivered
+                  </p>
                 </div>
 
                 <Button
@@ -298,11 +198,11 @@ const Checkout = () => {
                   disabled={isProcessing}
                   className="w-full bg-black text-white hover:bg-gray-800 mt-6"
                 >
-                  {isProcessing ? "Processing..." : `Place Order - KSh ${(getTotalPrice() + deliveryFee).toLocaleString()}`}
+                  {isProcessing ? "Processing..." : `Place Order - KSh ${getTotalPrice().toLocaleString()}`}
                 </Button>
 
                 <p className="text-xs text-gray-500 text-center">
-                  By placing this order, you agree to our terms and conditions
+                  By placing this order, you agree to pay cash on delivery
                 </p>
               </CardContent>
             </Card>
