@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Users, Package } from "lucide-react";
+import { Plus, Edit, Trash2, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ const Admin = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   // Form states
   const [name, setName] = useState("");
@@ -41,14 +42,14 @@ const Admin = () => {
       return;
     }
     
-    // Load initial products
+    // Load initial products with real images
     const initialProducts = [
       {
         id: 1,
         name: "Clear iPhone 15 Case",
         category: "iphone-cases",
         price: 2500,
-        image: "#f0f0f0",
+        image: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&h=400&fit=crop",
         description: "Crystal clear protection for your iPhone 15"
       },
       {
@@ -56,7 +57,7 @@ const Admin = () => {
         name: "Leather iPhone 15 Pro Case",
         category: "iphone-cases",
         price: 4500,
-        image: "#2c2c2c",
+        image: "https://images.unsplash.com/photo-1556656793-08538906a9f8?w=400&h=400&fit=crop",
         description: "Premium leather case with card slots"
       },
       {
@@ -64,7 +65,7 @@ const Admin = () => {
         name: "MagSafe iPhone 14 Case",
         category: "iphone-cases",
         price: 3500,
-        image: "#c0c0c0",
+        image: "https://images.unsplash.com/photo-1592779677260-dea1358c09d3?w=400&h=400&fit=crop",
         description: "Compatible with MagSafe charging"
       },
       {
@@ -72,7 +73,7 @@ const Admin = () => {
         name: "Aviator Sunglasses",
         category: "sunglasses",
         price: 6500,
-        image: "#2c2c2c",
+        image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop",
         description: "Classic aviator style with UV protection"
       },
       {
@@ -80,7 +81,7 @@ const Admin = () => {
         name: "Polarized Sport Sunglasses",
         category: "sunglasses",
         price: 8500,
-        image: "#f0f0f0",
+        image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=400&fit=crop",
         description: "Perfect for outdoor activities"
       },
       {
@@ -88,7 +89,7 @@ const Admin = () => {
         name: "Vintage Round Sunglasses",
         category: "sunglasses",
         price: 5500,
-        image: "#c0c0c0",
+        image: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=400&h=400&fit=crop",
         description: "Retro style meets modern protection"
       }
     ];
@@ -119,7 +120,7 @@ const Admin = () => {
       name,
       category,
       price: parseInt(price),
-      image: image || "#f0f0f0",
+      image: image || "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&h=400&fit=crop",
       description,
     };
 
@@ -145,12 +146,13 @@ const Admin = () => {
 
     const updatedProducts = products.map(product =>
       product.id === editingProduct.id
-        ? { ...product, name, category, price: parseInt(price), image: image || "#f0f0f0", description }
+        ? { ...product, name, category, price: parseInt(price), image: image || product.image, description }
         : product
     );
 
     setProducts(updatedProducts);
     resetForm();
+    setIsEditDialogOpen(false);
     
     toast({
       title: "Success",
@@ -173,6 +175,7 @@ const Admin = () => {
     setPrice(product.price.toString());
     setImage(product.image);
     setDescription(product.description);
+    setIsEditDialogOpen(true);
   };
 
   if (!user?.isAdmin) {
@@ -271,12 +274,12 @@ const Admin = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="image">Color Code (optional)</Label>
+                      <Label htmlFor="image">Image URL (optional)</Label>
                       <Input
                         id="image"
                         value={image}
                         onChange={(e) => setImage(e.target.value)}
-                        placeholder="#f0f0f0"
+                        placeholder="https://example.com/image.jpg"
                       />
                     </div>
                     <div>
@@ -301,9 +304,10 @@ const Admin = () => {
               {products.map((product) => (
                 <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center space-x-4">
-                    <div 
-                      className="w-12 h-12 rounded"
-                      style={{ backgroundColor: product.image }}
+                    <img 
+                      src={product.image}
+                      alt={product.name}
+                      className="w-12 h-12 rounded object-cover"
                     />
                     <div>
                       <h3 className="font-medium">{product.name}</h3>
@@ -312,68 +316,9 @@ const Admin = () => {
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={() => startEdit(product)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Edit Product</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="edit-name">Product Name *</Label>
-                            <Input
-                              id="edit-name"
-                              value={name}
-                              onChange={(e) => setName(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="edit-category">Category *</Label>
-                            <Select value={category} onValueChange={setCategory}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="iphone-cases">iPhone Cases</SelectItem>
-                                <SelectItem value="sunglasses">Sunglasses</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label htmlFor="edit-price">Price (KSh) *</Label>
-                            <Input
-                              id="edit-price"
-                              type="number"
-                              value={price}
-                              onChange={(e) => setPrice(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="edit-image">Color Code</Label>
-                            <Input
-                              id="edit-image"
-                              value={image}
-                              onChange={(e) => setImage(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="edit-description">Description *</Label>
-                            <Textarea
-                              id="edit-description"
-                              value={description}
-                              onChange={(e) => setDescription(e.target.value)}
-                            />
-                          </div>
-                          <Button onClick={handleEditProduct} className="w-full bg-black text-white hover:bg-gray-800">
-                            Update Product
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    <Button variant="outline" size="sm" onClick={() => startEdit(product)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -388,6 +333,65 @@ const Admin = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Edit Product Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Product</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name">Product Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-category">Category *</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="iphone-cases">iPhone Cases</SelectItem>
+                    <SelectItem value="sunglasses">Sunglasses</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="edit-price">Price (KSh) *</Label>
+                <Input
+                  id="edit-price"
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-image">Image URL</Label>
+                <Input
+                  id="edit-image"
+                  value={image}
+                  onChange={(e) => setImage(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-description">Description *</Label>
+                <Textarea
+                  id="edit-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </div>
+              <Button onClick={handleEditProduct} className="w-full bg-black text-white hover:bg-gray-800">
+                Update Product
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

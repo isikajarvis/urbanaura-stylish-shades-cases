@@ -24,6 +24,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Map product images to actual URLs
+  const getProductImage = (product: Product) => {
+    const imageMap: { [key: number]: string } = {
+      1: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&h=400&fit=crop",
+      2: "https://images.unsplash.com/photo-1556656793-08538906a9f8?w=400&h=400&fit=crop",
+      3: "https://images.unsplash.com/photo-1592779677260-dea1358c09d3?w=400&h=400&fit=crop",
+      4: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop",
+      5: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=400&fit=crop",
+      6: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=400&h=400&fit=crop"
+    };
+    return imageMap[product.id] || product.image;
+  };
+
   const handleAddToCart = async () => {
     setIsLoading(true);
     try {
@@ -53,10 +66,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
     <Card className="group hover:shadow-lg transition-shadow duration-300 bg-white border border-gray-200">
       <CardContent className="p-0">
         <Link to={`/product/${product.id}`}>
-          <div 
-            className="w-full h-64 rounded-t-lg"
-            style={{ backgroundColor: product.image }}
-          />
+          <div className="w-full h-64 rounded-t-lg overflow-hidden bg-gray-100">
+            <img
+              src={getProductImage(product)}
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          </div>
         </Link>
         <div className="p-6">
           <Link to={`/product/${product.id}`}>

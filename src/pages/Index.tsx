@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingCart, User, Search, Menu, X } from "lucide-react";
@@ -13,14 +12,14 @@ const Index = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
 
-  // Mock products data
+  // Updated products data with proper image URLs
   const products = [
     {
       id: 1,
       name: "Clear iPhone 15 Case",
       category: "iphone-cases",
       price: 2500,
-      image: "#f0f0f0",
+      image: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&h=400&fit=crop",
       description: "Crystal clear protection for your iPhone 15"
     },
     {
@@ -28,7 +27,7 @@ const Index = () => {
       name: "Leather iPhone 15 Pro Case",
       category: "iphone-cases",
       price: 4500,
-      image: "#2c2c2c",
+      image: "https://images.unsplash.com/photo-1556656793-08538906a9f8?w=400&h=400&fit=crop",
       description: "Premium leather case with card slots"
     },
     {
@@ -36,7 +35,7 @@ const Index = () => {
       name: "MagSafe iPhone 14 Case",
       category: "iphone-cases",
       price: 3500,
-      image: "#c0c0c0",
+      image: "https://images.unsplash.com/photo-1592779677260-dea1358c09d3?w=400&h=400&fit=crop",
       description: "Compatible with MagSafe charging"
     },
     {
@@ -44,7 +43,7 @@ const Index = () => {
       name: "Aviator Sunglasses",
       category: "sunglasses",
       price: 6500,
-      image: "#2c2c2c",
+      image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop",
       description: "Classic aviator style with UV protection"
     },
     {
@@ -52,7 +51,7 @@ const Index = () => {
       name: "Polarized Sport Sunglasses",
       category: "sunglasses",
       price: 8500,
-      image: "#f0f0f0",
+      image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=400&fit=crop",
       description: "Perfect for outdoor activities"
     },
     {
@@ -60,7 +59,7 @@ const Index = () => {
       name: "Vintage Round Sunglasses",
       category: "sunglasses",
       price: 5500,
-      image: "#c0c0c0",
+      image: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=400&h=400&fit=crop",
       description: "Retro style meets modern protection"
     }
   ];
