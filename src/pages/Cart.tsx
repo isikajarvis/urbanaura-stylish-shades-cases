@@ -30,6 +30,16 @@ const Cart = () => {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate("/")} 
+              className="mb-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+          </div>
           <div className="text-center">
             <h1 className="text-3xl font-bold text-black mb-4">Your Cart</h1>
             <p className="text-gray-600 mb-8">Your cart is empty</p>
@@ -48,10 +58,14 @@ const Cart = () => {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <Link to="/" className="inline-flex items-center text-black hover:text-gray-600 mb-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate("/")} 
+            className="mb-4"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Continue Shopping
-          </Link>
+            Back to Home
+          </Button>
           <h1 className="text-3xl font-bold text-black">Shopping Cart</h1>
         </div>
 
@@ -120,10 +134,6 @@ const Cart = () => {
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-semibold">KSh {getTotalPrice().toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Delivery</span>
-                  <span className="font-semibold text-green-600">Free</span>
-                </div>
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
@@ -136,9 +146,6 @@ const Cart = () => {
                 >
                   Proceed to Checkout
                 </Button>
-                <p className="text-xs text-gray-500 text-center">
-                  Delivery within 90 minutes
-                </p>
               </CardContent>
             </Card>
           </div>

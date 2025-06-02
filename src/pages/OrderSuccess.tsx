@@ -1,14 +1,15 @@
 
-import { Link } from "react-router-dom";
-import { CheckCircle, MessageCircle, Home } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { CheckCircle, MessageCircle, Home, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const OrderSuccess = () => {
+  const navigate = useNavigate();
   const orderNumber = `UA${Date.now().toString().slice(-6)}`;
 
   const handleWhatsAppContact = () => {
-    const message = `Hi! I just placed an order (${orderNumber}). Can you confirm my delivery details?`;
+    const message = `Hi! I just placed an order (${orderNumber}). Can you confirm my order details?`;
     const whatsappUrl = `https://wa.me/254701036266?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -16,6 +17,17 @@ const OrderSuccess = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate("/")} 
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
+        </div>
+
         <Card className="bg-white text-center">
           <CardHeader>
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
@@ -29,14 +41,14 @@ const OrderSuccess = () => {
                 Thank you for your order!
               </p>
               <p className="text-gray-600 mb-4">
-                Your order #{orderNumber} has been confirmed and is being prepared for delivery.
+                Your order #{orderNumber} has been confirmed and is being prepared.
               </p>
               <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                 <p className="text-green-800 font-medium">
                   🚚 Your order is on the way!
                 </p>
                 <p className="text-green-700 text-sm mt-1">
-                  Expected delivery: Within 90 minutes
+                  We will contact you shortly with order details
                 </p>
               </div>
             </div>
@@ -51,9 +63,9 @@ const OrderSuccess = () => {
                   </p>
                 </div>
                 <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium text-black mb-2">🎁 Prepare for delivery</h4>
+                  <h4 className="font-medium text-black mb-2">🎁 Prepare for order</h4>
                   <p className="text-sm text-gray-600">
-                    Our delivery team will contact you shortly
+                    Our team will contact you shortly
                   </p>
                 </div>
               </div>
@@ -80,7 +92,6 @@ const OrderSuccess = () => {
                 <strong>Order Details:</strong><br />
                 Order #: {orderNumber}<br />
                 Status: Confirmed & Processing<br />
-                Delivery: Within 90 minutes<br />
                 Support: WhatsApp 0701036266
               </p>
             </div>

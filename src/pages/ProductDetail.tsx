@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, ShoppingCart, MessageCircle, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
 interface Product {
@@ -20,6 +20,7 @@ const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -101,6 +102,16 @@ const ProductDetail = () => {
   const handleAddToCart = async () => {
     if (!product) return;
     
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to add items to your cart.",
+        variant: "destructive",
+      });
+      navigate("/login");
+      return;
+    }
+    
     setIsLoading(true);
     try {
       for (let i = 0; i < quantity; i++) {
@@ -141,9 +152,9 @@ const ProductDetail = () => {
             <Link to="/" className="text-2xl font-bold text-black">
               UrbanAura
             </Link>
-            <Button variant="outline" onClick={() => navigate(-1)}>
+            <Button variant="outline" onClick={() => navigate("/")}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              Back to Home
             </Button>
           </div>
         </div>
@@ -240,15 +251,14 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Delivery Info */}
+            {/* Contact Info */}
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-semibold mb-2">Delivery Information</h3>
+                <h3 className="font-semibold mb-2">Contact Information</h3>
                 <div className="space-y-2 text-sm text-gray-600">
-                  <p>✓ Fast delivery within 90 minutes</p>
-                  <p>✓ Delivery fee: KSh 200</p>
-                  <p>✓ Cash on delivery available</p>
-                  <p>✓ M-Pesa payment accepted</p>
+                  <p>📱 WhatsApp: +254 701 036 266</p>
+                  <p>💰 Cash on delivery available</p>
+                  <p>🔒 Secure payment options</p>
                 </div>
               </CardContent>
             </Card>
