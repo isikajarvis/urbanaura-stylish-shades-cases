@@ -1,16 +1,26 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Checkout = () => {
   const { items, getTotalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
   
   const [customerName, setCustomerName] = useState("");
@@ -19,8 +29,20 @@ const Checkout = () => {
   const [building, setBuilding] = useState("");
   const [houseNumber, setHouseNumber] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSignUpDialog, setShowSignUpDialog] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setShowSignUpDialog(true);
+    }
+  }, [user]);
 
   const handlePlaceOrder = async () => {
+    if (!user) {
+      setShowSignUpDialog(true);
+      return;
+    }
+
     if (!customerName.trim()) {
       toast({
         title: "Error",
@@ -53,7 +75,6 @@ const Checkout = () => {
     try {
       const totalAmount = getTotalPrice();
       
-      // Save order to localStorage for admin to see
       const order = {
         id: Date.now(),
         customer: {
@@ -64,7 +85,6 @@ const Checkout = () => {
           houseNumber: houseNumber.trim() || "Not specified"
         },
         items,
-        subtotal: getTotalPrice(),
         total: totalAmount,
         address: `${location.trim()}${building.trim() ? `, ${building.trim()}` : ''}${houseNumber.trim() ? `, House ${houseNumber.trim()}` : ''}`,
         paymentMethod: "Cash on Delivery",
@@ -75,7 +95,6 @@ const Checkout = () => {
       const existingOrders = JSON.parse(localStorage.getItem("urbanaura_orders") || "[]");
       localStorage.setItem("urbanaura_orders", JSON.stringify([...existingOrders, order]));
       
-      // Clear cart and redirect to success page
       clearCart();
       navigate("/order-success");
       
@@ -101,18 +120,34 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
+      <AlertDialog open={showSignUpDialog} onOpenChange={setShowSignUpDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign Up Required</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please sign up or log in before proceeding with your purchase.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => navigate("/register")}>
+              Sign Up
+            </AlertDialogAction>
+            <AlertDialogAction onClick={() => navigate("/login")} variant="outline">
+              Log In
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-black mb-8">Checkout</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Customer & Delivery Information */}
+          {/* Customer Information */}
           <div className="space-y-6">
             <Card className="bg-white">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Truck className="h-5 w-5 mr-2" />
-                  Delivery Information
-                </CardTitle>
+                <CardTitle>Customer Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -170,7 +205,7 @@ const Checkout = () => {
                 </div>
                 <div className="p-4 bg-green-50 rounded-lg">
                   <p className="text-sm text-green-700 font-medium">
-                    ✓ Free Delivery
+                    ✓ Cash on Delivery
                   </p>
                   <p className="text-sm text-green-600">
                     Pay cash when your order arrives
@@ -203,15 +238,7 @@ const Checkout = () => {
                 </div>
 
                 <div className="border-t pt-4 space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>KSh {getTotalPrice().toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-green-600">
-                    <span>Delivery</span>
-                    <span>Free</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold border-t pt-2">
+                  <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
                     <span>KSh {getTotalPrice().toLocaleString()}</span>
                   </div>
@@ -227,7 +254,7 @@ const Checkout = () => {
 
                 <Button
                   onClick={handlePlaceOrder}
-                  disabled={isProcessing}
+                  disabled={isProcessing || !user}
                   className="w-full bg-black text-white hover:bg-gray-800 mt-6"
                 >
                   {isProcessing ? "Processing..." : `Place Order - KSh ${getTotalPrice().toLocaleString()}`}

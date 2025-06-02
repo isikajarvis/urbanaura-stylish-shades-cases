@@ -105,14 +105,6 @@ const Login = () => {
                 </Link>
               </p>
             </div>
-
-            <div className="mt-4 p-4 bg-gray-50 rounded-md">
-              <p className="text-sm text-gray-600">
-                <strong>Demo credentials:</strong><br />
-                Admin: admin@urbanaura.com / admin123<br />
-                User: any email / any password
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>
