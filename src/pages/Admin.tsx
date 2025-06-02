@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Package, Users, ShoppingBag } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Users, ShoppingBag, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
@@ -49,6 +48,7 @@ const Admin = () => {
   const [price, setPrice] = useState("");
   const [image, setImage] = useState("");
   const [description, setDescription] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     // Check if user is admin
@@ -81,7 +81,21 @@ const Admin = () => {
     setPrice("");
     setImage("");
     setDescription("");
+    setImageFile(null);
     setEditingProduct(null);
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      // Create a preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleAddProduct = () => {
@@ -109,7 +123,7 @@ const Admin = () => {
       name: name.trim(),
       category,
       price: priceNum,
-      image: image.trim() || "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&h=400&fit=crop",
+      image: image || "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&h=400&fit=crop",
       description: description.trim(),
     };
 
@@ -152,7 +166,7 @@ const Admin = () => {
             name: name.trim(), 
             category, 
             price: priceNum, 
-            image: image.trim() || product.image, 
+            image: image || product.image, 
             description: description.trim() 
           }
         : product
@@ -315,13 +329,32 @@ const Admin = () => {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="image">Image URL</Label>
-                          <Input
-                            id="image"
-                            value={image}
-                            onChange={(e) => setImage(e.target.value)}
-                            placeholder="https://example.com/image.jpg"
-                          />
+                          <Label htmlFor="image-upload">Product Image</Label>
+                          <div className="flex flex-col space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Input
+                                id="image-upload"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageFileChange}
+                                className="hidden"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => document.getElementById('image-upload')?.click()}
+                                className="flex items-center space-x-2"
+                              >
+                                <Upload className="h-4 w-4" />
+                                <span>Upload Image</span>
+                              </Button>
+                            </div>
+                            {image && (
+                              <div className="mt-2">
+                                <img src={image} alt="Preview" className="w-20 h-20 object-cover rounded" />
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div>
                           <Label htmlFor="description">Description *</Label>
@@ -423,7 +456,7 @@ const Admin = () => {
                           <div>
                             <h4 className="font-medium mb-2">Customer Info</h4>
                             <p className="text-sm">{order.customer?.name || "Guest Customer"}</p>
-                            <p className="text-sm text-gray-600">{order.customer?.email || "No email"}</p>
+                            <p className="text-sm text-gray-600">{order.customer?.phone || "No phone"}</p>
                             <p className="text-sm text-gray-600">{order.address}</p>
                           </div>
                           
@@ -483,12 +516,32 @@ const Admin = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="edit-image">Image URL</Label>
-                <Input
-                  id="edit-image"
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                />
+                <Label htmlFor="edit-image-upload">Product Image</Label>
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      id="edit-image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageFileChange}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('edit-image-upload')?.click()}
+                      className="flex items-center space-x-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span>Upload Image</span>
+                    </Button>
+                  </div>
+                  {image && (
+                    <div className="mt-2">
+                      <img src={image} alt="Preview" className="w-20 h-20 object-cover rounded" />
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <Label htmlFor="edit-description">Description *</Label>

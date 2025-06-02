@@ -7,17 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCart } from "@/contexts/CartContext";
-import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
 const Checkout = () => {
   const { items, getTotalPrice, clearCart } = useCart();
-  const { user } = useAuth();
   const navigate = useNavigate();
   
-  const [customerName, setCustomerName] = useState(user?.name || "");
-  const [customerEmail, setCustomerEmail] = useState(user?.email || "");
-  const [address, setAddress] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [location, setLocation] = useState("");
+  const [building, setBuilding] = useState("");
+  const [houseNumber, setHouseNumber] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handlePlaceOrder = async () => {
@@ -30,10 +30,19 @@ const Checkout = () => {
       return;
     }
 
-    if (!address.trim()) {
+    if (!phoneNumber.trim()) {
       toast({
         title: "Error",
-        description: "Please enter your delivery address.",
+        description: "Please enter your phone number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!location.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your location.",
         variant: "destructive",
       });
       return;
@@ -49,12 +58,15 @@ const Checkout = () => {
         id: Date.now(),
         customer: {
           name: customerName.trim(),
-          email: customerEmail.trim() || "No email provided"
+          phone: phoneNumber.trim(),
+          location: location.trim(),
+          building: building.trim() || "Not specified",
+          houseNumber: houseNumber.trim() || "Not specified"
         },
         items,
         subtotal: getTotalPrice(),
         total: totalAmount,
-        address: address.trim(),
+        address: `${location.trim()}${building.trim() ? `, ${building.trim()}` : ''}${houseNumber.trim() ? `, House ${houseNumber.trim()}` : ''}`,
         paymentMethod: "Cash on Delivery",
         date: new Date().toISOString(),
         status: "Processing"
@@ -99,7 +111,7 @@ const Checkout = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Truck className="h-5 w-5 mr-2" />
-                  Customer & Delivery Information
+                  Delivery Information
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -115,25 +127,45 @@ const Checkout = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="customerEmail">Email (Optional)</Label>
+                  <Label htmlFor="phoneNumber">Phone Number *</Label>
                   <Input
-                    id="customerEmail"
-                    type="email"
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    id="phoneNumber"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="Enter your phone number"
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="location">Location *</Label>
+                  <Input
+                    id="location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="Enter your location (e.g., Westlands, Nairobi)"
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="building">Building Name</Label>
+                  <Input
+                    id="building"
+                    value={building}
+                    onChange={(e) => setBuilding(e.target.value)}
+                    placeholder="Enter building name (optional)"
                     className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="address">Delivery Address *</Label>
+                  <Label htmlFor="houseNumber">House Number</Label>
                   <Input
-                    id="address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Enter your detailed address"
+                    id="houseNumber"
+                    value={houseNumber}
+                    onChange={(e) => setHouseNumber(e.target.value)}
+                    placeholder="Enter house/apartment number (optional)"
                     className="mt-1"
-                    required
                   />
                 </div>
                 <div className="p-4 bg-green-50 rounded-lg">
