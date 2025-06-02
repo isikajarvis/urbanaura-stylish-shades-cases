@@ -100,7 +100,7 @@ const Checkout = () => {
       
       toast({
         title: "Order placed successfully!",
-        description: "Your order will be delivered soon. Payment on delivery.",
+        description: "Your order will arrive soon. Payment on delivery.",
       });
     } catch (error) {
       toast({
@@ -132,7 +132,7 @@ const Checkout = () => {
             <AlertDialogAction onClick={() => navigate("/register")}>
               Sign Up
             </AlertDialogAction>
-            <AlertDialogAction onClick={() => navigate("/login")} variant="outline">
+            <AlertDialogAction onClick={() => navigate("/login")}>
               Log In
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -248,7 +248,7 @@ const Checkout = () => {
                   <h4 className="font-medium text-blue-900 mb-2">Payment Method</h4>
                   <p className="text-sm text-blue-800">Cash on Delivery</p>
                   <p className="text-xs text-blue-600 mt-1">
-                    Pay with cash when your order is delivered
+                    Pay with cash when your order arrives
                   </p>
                 </div>
 
