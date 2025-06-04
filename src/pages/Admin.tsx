@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Edit, Trash2, Package, Users, ShoppingBag, Upload } from "lucide-react";
@@ -11,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface Product {
   id: number;
@@ -36,6 +35,7 @@ interface Order {
 const Admin = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -64,7 +64,9 @@ const Admin = () => {
   const loadProducts = () => {
     const savedProducts = localStorage.getItem("urbanaura_products");
     if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
+      const parsedProducts = JSON.parse(savedProducts);
+      console.log("Loading products from localStorage:", parsedProducts);
+      setProducts(parsedProducts);
     }
   };
 
@@ -99,6 +101,8 @@ const Admin = () => {
   };
 
   const handleAddProduct = () => {
+    console.log("Adding product with values:", { name, category, price, description });
+    
     if (!name.trim() || !category || !price || !description.trim()) {
       toast({
         title: "Error",
@@ -127,9 +131,16 @@ const Admin = () => {
       description: description.trim(),
     };
 
+    console.log("Creating new product:", newProduct);
+
     const updatedProducts = [...products, newProduct];
+    console.log("Updated products array:", updatedProducts);
+    
     setProducts(updatedProducts);
     localStorage.setItem("urbanaura_products", JSON.stringify(updatedProducts));
+    
+    console.log("Product added to state and localStorage");
+    
     resetForm();
     setIsAddDialogOpen(false);
     
@@ -137,6 +148,8 @@ const Admin = () => {
       title: "Success",
       description: "Product added successfully!",
     });
+
+    console.log("Toast notification sent");
   };
 
   const handleEditProduct = () => {
